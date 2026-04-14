@@ -10,6 +10,7 @@ import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import config.ConfigManager;
 import log.Logger;
 
 public class MainApplicationFrame extends JFrame {
