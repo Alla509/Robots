@@ -10,6 +10,8 @@ import javax.swing.JInternalFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+
+import config.ConfigManager;
 import log.Logger;
 
 public class MainApplicationFrame extends JFrame {
@@ -20,23 +22,39 @@ public class MainApplicationFrame extends JFrame {
 
     private final JDesktopPane desktopPane = new JDesktopPane();
     private final ConfigManager configManager = new ConfigManager();
-
+    private final RobotModel robotModel;
+    private final RobotController robotController;
+    private final javax.swing.Timer timer;
     public MainApplicationFrame() {
         configManager.load();
         loadMainWindowState();
+
+        robotModel = new RobotModel();
+        robotController = new RobotController(robotModel);
 
         setContentPane(desktopPane);
 
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
-        GameWindow gameWindow = new GameWindow();
+
+        GameWindow gameWindow = new GameWindow(robotModel);
         gameWindow.setSize(400, 400);
         addWindow(gameWindow);
 
+        RobotCoordinatesWindow coordWindow = new RobotCoordinatesWindow(robotModel);
+        coordWindow.setSize(250, 100);
+        coordWindow.setLocation(10, 400);
+        addWindow(coordWindow);
+
         loadInternalWindowState(LOG_WINDOW_NAME, logWindow);
         loadInternalWindowState(GAME_WINDOW_NAME, gameWindow);
+        loadInternalWindowState("CoordWindow", coordWindow);
 
         setJMenuBar(new MenuBarFactory(this).createMenuBar());
+
+        // Таймер для обновления модели (каждые 10 мс)
+        timer = new javax.swing.Timer(10, e -> robotController.updateModel());
+        timer.start();
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -47,6 +65,7 @@ public class MainApplicationFrame extends JFrame {
     }
 
     public void exitApplication() {
+        timer.stop();
         saveAllWindowsState();
         configManager.save();
 
