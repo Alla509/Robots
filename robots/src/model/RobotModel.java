@@ -1,7 +1,8 @@
-package gui;
+package model;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.awt.Point;
 
 public class RobotModel {
     public static final String PROP_POSITION = "position";
@@ -31,31 +32,28 @@ public class RobotModel {
     public int getTargetY() { return targetY; }
 
     public void setTarget(int x, int y) {
-        int oldX = targetX;
-        int oldY = targetY;
         targetX = x;
         targetY = y;
-        pcs.firePropertyChange(PROP_TARGET, null, new java.awt.Point(x, y));
+        pcs.firePropertyChange(PROP_TARGET, null, new Point(x, y));
     }
 
-    public void setRobotPosition(double x, double y) {
-        double oldX = robotX;
-        double oldY = robotY;
+    private void setRobotPosition(double x, double y) {
         robotX = x;
         robotY = y;
-        pcs.firePropertyChange(PROP_POSITION, null, new java.awt.Point((int)x, (int)y));
+        pcs.firePropertyChange(PROP_POSITION, null, new Point((int)x, (int)y));
     }
 
-    public void setRobotDirection(double direction) {
-        double oldDir = robotDirection;
-        robotDirection = normalizeRadians(direction);
-        pcs.firePropertyChange(PROP_DIRECTION, oldDir, robotDirection);
+    private void setRobotDirection(double direction) {
+        double old = robotDirection;
+        robotDirection = RobotMath.normalizeRadians(direction);
+        pcs.firePropertyChange(PROP_DIRECTION, old, robotDirection);
     }
 
-    // Метод обновления модели по законам физики
+    // Логика движения
     public void update(double velocity, double angularVelocity, double duration) {
-        velocity = applyLimits(velocity, 0, maxVelocity);
-        angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
+        velocity = RobotMath.applyLimits(velocity, 0, RobotConstants.MAX_VELOCITY);
+        angularVelocity = RobotMath.applyLimits(angularVelocity, -RobotConstants.MAX_ANGULAR_VELOCITY,
+                RobotConstants.MAX_ANGULAR_VELOCITY);
 
         double newX, newY;
         if (Math.abs(angularVelocity) < 1e-8) {
@@ -67,24 +65,9 @@ public class RobotModel {
             newY = robotY - (velocity / angularVelocity) *
                     (Math.cos(robotDirection + angularVelocity * duration) - Math.cos(robotDirection));
         }
-        double newDirection = normalizeRadians(robotDirection + angularVelocity * duration);
+        double newDirection = robotDirection + angularVelocity * duration;
 
         setRobotPosition(newX, newY);
         setRobotDirection(newDirection);
     }
-
-    private double applyLimits(double value, double min, double max) {
-        if (value < min) return min;
-        if (value > max) return max;
-        return value;
-    }
-
-    private double normalizeRadians(double angle) {
-        while (angle < 0) angle += 2 * Math.PI;
-        while (angle >= 2 * Math.PI) angle -= 2 * Math.PI;
-        return angle;
-    }
-
-    private static final double maxVelocity = 0.1;
-    private static final double maxAngularVelocity = 0.001;
 }

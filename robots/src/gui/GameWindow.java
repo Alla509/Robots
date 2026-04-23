@@ -1,8 +1,8 @@
 package gui;
 
-import java.awt.BorderLayout;
-import javax.swing.JInternalFrame;
-import javax.swing.JPanel;
+import model.RobotModel;
+import javax.swing.*;
+import java.awt.*;
 
 public class GameWindow extends JInternalFrame {
     public GameWindow(RobotModel model) {

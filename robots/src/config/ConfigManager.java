@@ -7,10 +7,6 @@ import java.io.IOException;
 import java.util.Properties;
 import log.Logger;
 
-/**
- * Управление сохранением и загрузкой конфигурации приложения.
- * Файл хранится в домашнем каталоге пользователя.
- */
 public class ConfigManager {
     private static final String CONFIG_FILE = System.getProperty("user.home") + File.separator + ".robot-config.properties";
     private final Properties props = new Properties();
@@ -67,30 +63,27 @@ public class ConfigManager {
     public boolean getWindowIcon(String windowName, boolean defaultValue) { return getBooleanProperty(key(windowName, "icon"), defaultValue); }
     public boolean getWindowMaximized(String windowName, boolean defaultValue) { return getBooleanProperty(key(windowName, "maximized"), defaultValue); }
 
-    private String key(String windowName, String suffix) {
-        return windowName + "." + suffix;   // единственное место с конкатенацией (инкапсулировано)
+    public void setWindowVisible(String windowName, boolean visible) {
+        setProperty(key(windowName, "visible"), visible);
     }
 
-    private void setProperty(String key, int value) {
-        props.setProperty(key, Integer.toString(value));
+    public boolean getWindowVisible(String windowName, boolean defaultValue) {
+        return getBooleanProperty(key(windowName, "visible"), defaultValue);
     }
 
-    private void setProperty(String key, boolean value) {
-        props.setProperty(key, Boolean.toString(value));
-    }
+
+    private String key(String windowName, String suffix) { return windowName + "." + suffix; }
+    private void setProperty(String key, int value) { props.setProperty(key, Integer.toString(value)); }
+    private void setProperty(String key, boolean value) { props.setProperty(key, Boolean.toString(value)); }
 
     private int getIntProperty(String key, int defaultValue) {
-        String value = props.getProperty(key);
-        if (value == null) return defaultValue;
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
+        String val = props.getProperty(key);
+        if (val == null) return defaultValue;
+        try { return Integer.parseInt(val); } catch (NumberFormatException e) { return defaultValue; }
     }
 
     private boolean getBooleanProperty(String key, boolean defaultValue) {
-        String value = props.getProperty(key);
-        return value == null ? defaultValue : Boolean.parseBoolean(value);
+        String val = props.getProperty(key);
+        return val == null ? defaultValue : Boolean.parseBoolean(val);
     }
 }

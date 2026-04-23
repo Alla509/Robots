@@ -1,14 +1,13 @@
 package gui;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import model.RobotModel;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import javax.swing.JPanel;
 
 public class GameVisualizer extends JPanel implements PropertyChangeListener {
     private final RobotModel model;
@@ -16,11 +15,10 @@ public class GameVisualizer extends JPanel implements PropertyChangeListener {
     public GameVisualizer(RobotModel model) {
         this.model = model;
         model.addPropertyChangeListener(this);
-
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                model.setTarget(e.getPoint().x, e.getPoint().y);
+                model.setTarget(e.getX(), e.getY());
             }
         });
         setDoubleBuffered(true);
@@ -61,11 +59,11 @@ public class GameVisualizer extends JPanel implements PropertyChangeListener {
         drawOval(g, x, y, 5, 5);
     }
 
-    private void fillOval(Graphics g, int centerX, int centerY, int diam1, int diam2) {
-        g.fillOval(centerX - diam1/2, centerY - diam2/2, diam1, diam2);
+    private void fillOval(Graphics g, int cx, int cy, int w, int h) {
+        g.fillOval(cx - w/2, cy - h/2, w, h);
     }
 
-    private void drawOval(Graphics g, int centerX, int centerY, int diam1, int diam2) {
-        g.drawOval(centerX - diam1/2, centerY - diam2/2, diam1, diam2);
+    private void drawOval(Graphics g, int cx, int cy, int w, int h) {
+        g.drawOval(cx - w/2, cy - h/2, w, h);
     }
 }
