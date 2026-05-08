@@ -45,14 +45,14 @@ public class RobotModel {
 
     private void setRobotDirection(double direction) {
         double old = robotDirection;
-        robotDirection = RobotMath.normalizeRadians(direction);
+        robotDirection = normalizeRadians(direction);
         pcs.firePropertyChange(PROP_DIRECTION, old, robotDirection);
     }
 
     // Логика движения
-    public void update(double velocity, double angularVelocity, double duration) {
-        velocity = RobotMath.applyLimits(velocity, 0, RobotConstants.MAX_VELOCITY);
-        angularVelocity = RobotMath.applyLimits(angularVelocity, -RobotConstants.MAX_ANGULAR_VELOCITY,
+    private void update(double velocity, double angularVelocity, double duration) {
+        velocity = applyLimits(velocity, 0, RobotConstants.MAX_VELOCITY);
+        angularVelocity = applyLimits(angularVelocity, -RobotConstants.MAX_ANGULAR_VELOCITY,
                 RobotConstants.MAX_ANGULAR_VELOCITY);
 
         double newX, newY;
@@ -69,5 +69,39 @@ public class RobotModel {
 
         setRobotPosition(newX, newY);
         setRobotDirection(newDirection);
+    }
+
+    public void update(double duration) {
+        double dx = getTargetX() - getRobotX();
+        double dy = getTargetY() - getRobotY();
+        double distance = Math.hypot(dx, dy);
+        if (distance < 0.5) return;
+
+        double angleToTarget = normalizeRadians(Math.atan2(dy, dx));
+        double robotDir = getRobotDirection();
+        double diff = angleToTarget - robotDir;
+        diff = normalizeRadians(diff);
+        if (diff > Math.PI) diff -= 2 * Math.PI;
+        if (diff < -Math.PI) diff += 2 * Math.PI;
+
+        double angularVelocity;
+        if (Math.abs(diff) < 0.01) angularVelocity = 0;
+        else angularVelocity = (diff > 0) ? RobotConstants.MAX_ANGULAR_VELOCITY : -RobotConstants.MAX_ANGULAR_VELOCITY;
+
+        double velocity = (Math.abs(diff) < 0.3) ? RobotConstants.MAX_VELOCITY : 0;
+
+        update(velocity, angularVelocity, duration);
+    }
+
+    private static double applyLimits(double value, double min, double max) {
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+    }
+
+    private static double normalizeRadians(double angle) {
+        while (angle < 0) angle += 2 * Math.PI;
+        while (angle >= 2 * Math.PI) angle -= 2 * Math.PI;
+        return angle;
     }
 }

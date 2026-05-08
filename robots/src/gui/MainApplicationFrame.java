@@ -22,20 +22,16 @@ public class MainApplicationFrame extends JFrame {
     private final ConfigManager configManager = new ConfigManager();
     private final WindowStateManager windowStateManager = new WindowStateManager(configManager);
 
-    private final RobotModel robotModel;
     private final RobotController robotController;
-    private final Timer timer;
 
-    public MainApplicationFrame() {
+    public MainApplicationFrame(RobotModel robotModel, RobotController robotController) {
+        this.robotController = robotController;
         configManager.load();
         windowStateManager.loadMainWindowState(this);
         setContentPane(desktopPane);
 
-        robotModel = new RobotModel();
-        robotController = new RobotController(robotModel);
-
         LogWindow logWindow = createLogWindow();
-        GameWindow gameWindow = new GameWindow(robotModel);
+        GameWindow gameWindow = new GameWindow(robotModel, robotController);
         RobotCoordinatesWindow coordWindow = new RobotCoordinatesWindow(robotModel);
 
         addWindow(LOG_WINDOW_NAME, logWindow);
@@ -50,9 +46,6 @@ public class MainApplicationFrame extends JFrame {
         windowStateManager.loadInternalWindowState(coordWindow, COORD_WINDOW_NAME);
 
         setJMenuBar(new MenuBarFactory(this).createMenuBar());
-
-        timer = new Timer(10, e -> robotController.updateModel());
-        timer.start();
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -93,7 +86,7 @@ public class MainApplicationFrame extends JFrame {
     }
 
     public void exitApplication() {
-        if (timer != null && timer.isRunning()) timer.stop();
+        if (robotController != null) robotController.stopTimer();
 
         windowStateManager.saveMainWindowState(this);
         for (JInternalFrame frame : desktopPane.getAllFrames()) {

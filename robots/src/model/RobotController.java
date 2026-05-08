@@ -1,31 +1,25 @@
 package model;
 
+import javax.swing.Timer;
 public class RobotController {
     private final RobotModel model;
+    private final Timer timer;
 
     public RobotController(RobotModel model) {
         this.model = model;
+        this.timer = new Timer(10, e -> updateModel());
+        timer.start();
+    }
+
+    public void setTarget(int x, int y) {
+        model.setTarget(x, y);
+    }
+
+    public void stopTimer() {
+        if (timer.isRunning()) timer.stop();
     }
 
     public void updateModel() {
-        double dx = model.getTargetX() - model.getRobotX();
-        double dy = model.getTargetY() - model.getRobotY();
-        double distance = Math.hypot(dx, dy);
-        if (distance < 0.5) return;
-
-        double angleToTarget = RobotMath.normalizeRadians(Math.atan2(dy, dx));
-        double robotDir = model.getRobotDirection();
-        double diff = angleToTarget - robotDir;
-        diff = RobotMath.normalizeRadians(diff);
-        if (diff > Math.PI) diff -= 2 * Math.PI;
-        if (diff < -Math.PI) diff += 2 * Math.PI;
-
-        double angularVelocity;
-        if (Math.abs(diff) < 0.01) angularVelocity = 0;
-        else angularVelocity = (diff > 0) ? RobotConstants.MAX_ANGULAR_VELOCITY : -RobotConstants.MAX_ANGULAR_VELOCITY;
-
-        double velocity = (Math.abs(diff) < 0.3) ? RobotConstants.MAX_VELOCITY : 0;
-
-        model.update(velocity, angularVelocity, 10);
+        model.update( 10);
     }
 }

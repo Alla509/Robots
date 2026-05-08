@@ -1,5 +1,6 @@
 package gui;
 
+import model.RobotController;
 import model.RobotModel;
 import javax.swing.*;
 import java.awt.*;
@@ -12,13 +13,13 @@ import java.beans.PropertyChangeListener;
 public class GameVisualizer extends JPanel implements PropertyChangeListener {
     private final RobotModel model;
 
-    public GameVisualizer(RobotModel model) {
+    public GameVisualizer(RobotModel model, RobotController controller) {
         this.model = model;
         model.addPropertyChangeListener(this);
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                model.setTarget(e.getX(), e.getY());
+                controller.setTarget(e.getX(), e.getY());
             }
         });
         setDoubleBuffered(true);
