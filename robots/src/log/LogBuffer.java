@@ -5,10 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- * Потокобезопасный кольцевой буфер с ограниченной ёмкостью.
- * Старые записи автоматически вытесняются при переполнении.
- */
+
 public class LogBuffer {
     private final int capacity;
     private final LogEntry[] buffer;
@@ -22,9 +19,7 @@ public class LogBuffer {
         this.buffer = new LogEntry[capacity];
     }
 
-    /**
-     * Добавляет запись. При переполнении самая старая запись перезаписывается.
-     */
+
     public void add(LogEntry entry) {
         lock.writeLock().lock();
         try {
@@ -40,9 +35,7 @@ public class LogBuffer {
         }
     }
 
-    /**
-     * Возвращает текущее количество записей.
-     */
+
     public int size() {
         lock.readLock().lock();
         try {
@@ -52,9 +45,7 @@ public class LogBuffer {
         }
     }
 
-    /**
-     * Возвращает снимок всех записей в порядке от старых к новым.
-     */
+
     public List<LogEntry> getAll() {
         lock.readLock().lock();
         try {
@@ -68,10 +59,7 @@ public class LogBuffer {
         }
     }
 
-    /**
-     * Возвращает снимок подсписка записей от startIndex (включительно) до endIndex (исключительно).
-     * Индексы соответствуют позициям в порядке от старых к новым.
-     */
+
     public List<LogEntry> getRange(int startIndex, int endIndex) {
         if (startIndex < 0 || endIndex > size || startIndex > endIndex) {
             throw new IndexOutOfBoundsException("Invalid range: " + startIndex + ".." + endIndex);

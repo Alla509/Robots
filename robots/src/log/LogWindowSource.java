@@ -2,15 +2,7 @@ package log;
 
 import java.util.ArrayList;
 import java.util.Collections;
-/**
- * Что починить:
- * 1. Этот класс порождает утечку ресурсов (связанные слушатели оказываются
- * удерживаемыми в памяти)
- * 2. Этот класс хранит активные сообщения лога, но в такой реализации он
- * их лишь накапливает. Надо же, чтобы количество сообщений в логе было ограничено
- * величиной m_iQueueLength (т.е. реально нужна очередь сообщений
- * ограниченного размера)
- */
+
 public class LogWindowSource {
     private final LogBuffer logBuffer;          // ограниченная очередь
     private final ArrayList<LogChangeListener> m_listeners;
@@ -57,12 +49,7 @@ public class LogWindowSource {
         return logBuffer.size();
     }
 
-    /**
-     * Возвращает диапазон записей от startFrom (включительно) в количестве count.
-     * @param startFrom индекс первой записи (0 – самая старая)
-     * @param count количество записей
-     * @return неизменяемый список записей (может быть меньше count, если достигнут конец)
-     */
+
     public Iterable<LogEntry> range(int startFrom, int count) {
         int total = size();
         if (startFrom < 0 || startFrom >= total) {
@@ -72,9 +59,7 @@ public class LogWindowSource {
         return logBuffer.getRange(startFrom, endIndex);
     }
 
-    /**
-     * Возвращает все записи в виде снимка.
-     */
+
     public Iterable<LogEntry> all() {
         return logBuffer.getAll();
     }
