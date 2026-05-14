@@ -1,11 +1,10 @@
 package gui;
 
-import java.awt.GridLayout;
+import model.RobotModel;
+import javax.swing.*;
+import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import javax.swing.JInternalFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 
 public class RobotCoordinatesWindow extends JInternalFrame implements PropertyChangeListener {
     private final JLabel positionLabel;
@@ -23,8 +22,7 @@ public class RobotCoordinatesWindow extends JInternalFrame implements PropertyCh
         panel.add(positionLabel);
         panel.add(directionLabel);
         getContentPane().add(panel);
-        pack();
-        setSize(200, 80);
+        setSize(250, 80);
         updateLabels();
     }
 
@@ -35,9 +33,6 @@ public class RobotCoordinatesWindow extends JInternalFrame implements PropertyCh
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if (RobotModel.PROP_POSITION.equals(evt.getPropertyName()) ||
-                RobotModel.PROP_DIRECTION.equals(evt.getPropertyName())) {
-            updateLabels();
-        }
+        updateLabels();
     }
 }

@@ -1,7 +1,8 @@
-package gui;
+package model;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.awt.Point;
 
 public class RobotModel {
     public static final String PROP_POSITION = "position";
@@ -31,31 +32,28 @@ public class RobotModel {
     public int getTargetY() { return targetY; }
 
     public void setTarget(int x, int y) {
-        int oldX = targetX;
-        int oldY = targetY;
         targetX = x;
         targetY = y;
-        pcs.firePropertyChange(PROP_TARGET, null, new java.awt.Point(x, y));
+        pcs.firePropertyChange(PROP_TARGET, null, new Point(x, y));
     }
 
-    public void setRobotPosition(double x, double y) {
-        double oldX = robotX;
-        double oldY = robotY;
+    private void setRobotPosition(double x, double y) {
         robotX = x;
         robotY = y;
-        pcs.firePropertyChange(PROP_POSITION, null, new java.awt.Point((int)x, (int)y));
+        pcs.firePropertyChange(PROP_POSITION, null, new Point((int)x, (int)y));
     }
 
-    public void setRobotDirection(double direction) {
-        double oldDir = robotDirection;
+    private void setRobotDirection(double direction) {
+        double old = robotDirection;
         robotDirection = normalizeRadians(direction);
-        pcs.firePropertyChange(PROP_DIRECTION, oldDir, robotDirection);
+        pcs.firePropertyChange(PROP_DIRECTION, old, robotDirection);
     }
 
-    // Метод обновления модели по законам физики
-    public void update(double velocity, double angularVelocity, double duration) {
-        velocity = applyLimits(velocity, 0, maxVelocity);
-        angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
+    // Логика движения
+    private void update(double velocity, double angularVelocity, double duration) {
+        velocity = applyLimits(velocity, 0, RobotConstants.MAX_VELOCITY);
+        angularVelocity = applyLimits(angularVelocity, -RobotConstants.MAX_ANGULAR_VELOCITY,
+                RobotConstants.MAX_ANGULAR_VELOCITY);
 
         double newX, newY;
         if (Math.abs(angularVelocity) < 1e-8) {
@@ -67,24 +65,43 @@ public class RobotModel {
             newY = robotY - (velocity / angularVelocity) *
                     (Math.cos(robotDirection + angularVelocity * duration) - Math.cos(robotDirection));
         }
-        double newDirection = normalizeRadians(robotDirection + angularVelocity * duration);
+        double newDirection = robotDirection + angularVelocity * duration;
 
         setRobotPosition(newX, newY);
         setRobotDirection(newDirection);
     }
 
-    private double applyLimits(double value, double min, double max) {
+    public void update(double duration) {
+        double dx = getTargetX() - getRobotX();
+        double dy = getTargetY() - getRobotY();
+        double distance = Math.hypot(dx, dy);
+        if (distance < 0.5) return;
+
+        double angleToTarget = normalizeRadians(Math.atan2(dy, dx));
+        double robotDir = getRobotDirection();
+        double diff = angleToTarget - robotDir;
+        diff = normalizeRadians(diff);
+        if (diff > Math.PI) diff -= 2 * Math.PI;
+        if (diff < -Math.PI) diff += 2 * Math.PI;
+
+        double angularVelocity;
+        if (Math.abs(diff) < 0.01) angularVelocity = 0;
+        else angularVelocity = (diff > 0) ? RobotConstants.MAX_ANGULAR_VELOCITY : -RobotConstants.MAX_ANGULAR_VELOCITY;
+
+        double velocity = (Math.abs(diff) < 0.3) ? RobotConstants.MAX_VELOCITY : 0;
+
+        update(velocity, angularVelocity, duration);
+    }
+
+    private static double applyLimits(double value, double min, double max) {
         if (value < min) return min;
         if (value > max) return max;
         return value;
     }
 
-    private double normalizeRadians(double angle) {
+    private static double normalizeRadians(double angle) {
         while (angle < 0) angle += 2 * Math.PI;
         while (angle >= 2 * Math.PI) angle -= 2 * Math.PI;
         return angle;
     }
-
-    private static final double maxVelocity = 0.1;
-    private static final double maxAngularVelocity = 0.001;
 }
