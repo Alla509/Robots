@@ -1,78 +1,29 @@
 package log;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import collections.BoundedCircularList;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 
 public class LogBuffer {
-    private final int capacity;
-    private final LogEntry[] buffer;
-    private int head;       // индекс самой старой записи
-    private int size;       // текущее количество записей
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final BoundedCircularList<LogEntry> buffer;
 
     public LogBuffer(int capacity) {
-        if (capacity <= 0) throw new IllegalArgumentException("Capacity must be positive");
-        this.capacity = capacity;
-        this.buffer = new LogEntry[capacity];
+        buffer = new BoundedCircularList<>(capacity);
     }
-
 
     public void add(LogEntry entry) {
-        lock.writeLock().lock();
-        try {
-            if (size < capacity) {
-                buffer[(head + size) % capacity] = entry;
-                size++;
-            } else {
-                buffer[head] = entry;
-                head = (head + 1) % capacity;
-            }
-        } finally {
-            lock.writeLock().unlock();
-        }
+        buffer.add(entry);
     }
-
 
     public int size() {
-        lock.readLock().lock();
-        try {
-            return size;
-        } finally {
-            lock.readLock().unlock();
-        }
+        return buffer.size();
     }
-
 
     public List<LogEntry> getAll() {
-        lock.readLock().lock();
-        try {
-            List<LogEntry> snapshot = new ArrayList<>(size);
-            for (int i = 0; i < size; i++) {
-                snapshot.add(buffer[(head + i) % capacity]);
-            }
-            return Collections.unmodifiableList(snapshot);
-        } finally {
-            lock.readLock().unlock();
-        }
+        return buffer.snapshot();
     }
 
-
-    public List<LogEntry> getRange(int startIndex, int endIndex) {
-        if (startIndex < 0 || endIndex > size || startIndex > endIndex) {
-            throw new IndexOutOfBoundsException("Invalid range: " + startIndex + ".." + endIndex);
-        }
-        lock.readLock().lock();
-        try {
-            List<LogEntry> range = new ArrayList<>(endIndex - startIndex);
-            for (int i = startIndex; i < endIndex; i++) {
-                range.add(buffer[(head + i) % capacity]);
-            }
-            return Collections.unmodifiableList(range);
-        } finally {
-            lock.readLock().unlock();
-        }
+    // Для совместимости
+    public List<LogEntry> getRange(int start, int end) {
+        return buffer.subList(start, end);
     }
 }

@@ -1,66 +1,67 @@
 package log;
 
+import collections.BoundedCircularList;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class LogWindowSource {
-    private final LogBuffer logBuffer;          // ограниченная очередь
-    private final ArrayList<LogChangeListener> m_listeners;
-    private volatile LogChangeListener[] m_activeListeners;
+    private final BoundedCircularList<LogEntry> buffer;
+    private final List<LogChangeListener> listeners = new ArrayList<>();
+    private volatile LogChangeListener[] activeListeners;
 
-    public LogWindowSource(int iQueueLength) {
-        logBuffer = new LogBuffer(iQueueLength);
-        m_listeners = new ArrayList<>();
+    public LogWindowSource(int capacity) {
+        this.buffer = new BoundedCircularList<>(capacity);
     }
 
     public void registerListener(LogChangeListener listener) {
-        synchronized (m_listeners) {
-            m_listeners.add(listener);
-            m_activeListeners = null;
+        synchronized (listeners) {
+            listeners.add(listener);
+            activeListeners = null;
         }
     }
 
     public void unregisterListener(LogChangeListener listener) {
-        synchronized (m_listeners) {
-            m_listeners.remove(listener);
-            m_activeListeners = null;
+        synchronized (listeners) {
+            listeners.remove(listener);
+            activeListeners = null;
         }
     }
 
-    public void append(LogLevel logLevel, String strMessage) {
-        LogEntry entry = new LogEntry(logLevel, strMessage);
-        logBuffer.add(entry);
 
-        LogChangeListener[] activeListeners = m_activeListeners;
-        if (activeListeners == null) {
-            synchronized (m_listeners) {
-                if (m_activeListeners == null) {
-                    activeListeners = m_listeners.toArray(new LogChangeListener[0]);
-                    m_activeListeners = activeListeners;
+    public void append(LogLevel level, String message) {
+        LogEntry entry = new LogEntry(level, message);
+        buffer.add(entry);
+
+        LogChangeListener[] copy = activeListeners;
+        if (copy == null) {
+            synchronized (listeners) {
+                if (activeListeners == null) {
+                    activeListeners = listeners.toArray(new LogChangeListener[0]);
+                    copy = activeListeners;
                 }
             }
         }
-        for (LogChangeListener listener : activeListeners) {
+        for (LogChangeListener listener : copy) {
             listener.onLogChanged();
         }
     }
 
     public int size() {
-        return logBuffer.size();
-    }
-
-
-    public Iterable<LogEntry> range(int startFrom, int count) {
-        int total = size();
-        if (startFrom < 0 || startFrom >= total) {
-            return Collections.emptyList();
-        }
-        int endIndex = Math.min(startFrom + count, total);
-        return logBuffer.getRange(startFrom, endIndex);
+        return buffer.size();
     }
 
 
     public Iterable<LogEntry> all() {
-        return logBuffer.getAll();
+        return buffer.subList(0, buffer.size());
+    }
+
+    public Iterable<LogEntry> range(int startFrom, int count) {
+        int total = buffer.size();
+        if (startFrom < 0 || startFrom >= total) {
+            return Collections.emptyList();
+        }
+        int end = Math.min(startFrom + count, total);
+        return buffer.subList(startFrom, end);
     }
 }
